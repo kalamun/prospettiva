@@ -16,12 +16,25 @@ function on_window_load( e )
 	ui.playlist = document.getElementById( 'playlist' );
 	
 	let track_id = 0;
-	console.log(window.opener, window.opener.playlist);
+
 	for(const [track, entry] of Object.entries(window.opener.playlist))
 	{
 		let track_elm = document.createElement( 'li' );
 		track_elm.innerHTML = track;
 		
+		const overlay_ul = document.createElement('span');
+		overlay_ul.className = 'overlays';
+		let overlay_id = 0;
+		for(const file of entry.overlays) {
+			overlay_id++;
+			let overlay_elm = document.createElement( 'span' );
+			overlay_elm.innerHTML = overlay_id;
+			overlay_elm.dataset.id = overlay_id;
+			overlay_elm.addEventListener( 'click', (e) => window.opener.play_overlay(overlay_id) );
+			overlay_ul.appendChild(overlay_elm);
+		}
+		track_elm.appendChild( overlay_ul );
+
 		const track_ul = document.createElement( 'ul' );
 		for(const file of entry.visuals) {
 			const current_id = track_id++;

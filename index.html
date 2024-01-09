@@ -16,6 +16,20 @@ body {
 	padding:100px;
 }
 
+#cta {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 1000;
+	padding: 30px;
+}
+#cta button {
+	visibility: hidden;
+}
+#cta:hover button {
+	visibility: visible;
+}
+
 #player {
 	position:relative;
 	background:#000;
@@ -24,6 +38,18 @@ body {
 	width:100%;
 	height:100%;
 	object-fit: cover;
+}
+#player video#overlay_video {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	mix-blend-mode: screen;
+	display: none;
+}
+#player video#overlay_video.visible {
+	display: block;
 }
 
 .strobe-light {
@@ -121,7 +147,7 @@ body {
   
 <body>
 
-<div>
+<div id="cta">
 	<button id="open_directory">Load directory</button>
 	<button id="full_screen">Full screen</button>
 	<button id="open_controls">Open controls</button>
@@ -129,6 +155,7 @@ body {
 
 <div id="player">
 	<video autoplay="true" id="src_video" muted loop></video>
+	<video autoplay="true" id="overlay_video" muted loop></video>
 </div>
 
 

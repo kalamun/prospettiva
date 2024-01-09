@@ -15,6 +15,7 @@ var last_tap = null,
 	tap_history = [],
 	bpm = 60,
 	tap_length = 1000,
+	key_down = {},
 	beat = 0,
 	next_beat_on = 0,
 	beat_timer = null,
@@ -33,6 +34,7 @@ function on_window_load( e )
 	ui = {
 		bpm : document.getElementById( 'bpm' ),
 		src_video : document.getElementById( 'src_video' ),
+		overlay_video : document.getElementById( 'overlay_video' ),
 		projector_container: document.getElementById( 'player' ),
 		controls_window : null,
 	};
@@ -55,6 +57,9 @@ function on_keydown( e )
 {
 	if(!["F3", "F5", "F12"].includes(e.code)) {
 		e.preventDefault();
+
+		if (key_down[e.code]) return;
+		key_down[e.code] = true;
 
 		var is_shift = !!e.shiftKey;
 		//console.log( e.code );
@@ -84,17 +89,46 @@ function on_keydown( e )
 	
 		else if( e.code == 'KeyZ' )
 			zoom_start();
+
+		else if( e.code == 'Digit1' )
+			play_overlay(1);
+		else if( e.code == 'Digit2' )
+			play_overlay(2);
+		else if( e.code == 'Digit3' )
+			play_overlay(3);
+		else if( e.code == 'Digit4' )
+			play_overlay(4);
+		else if( e.code == 'Digit5' )
+			play_overlay(5);
+		else if( e.code == 'Digit6' )
+			play_overlay(6);
 	}
 }
 
 function on_keyup( e )
 {
 	e.preventDefault();
+	key_down[e.code] = false;
+
 	if( e.code == 'KeyS' )
 		shake_stop();
 
-	if( e.code == 'KeyZ' )
+	else if( e.code == 'KeyZ' )
 		zoom_stop();
+
+	else if( e.code == 'Digit1' )
+		stop_overlay(1);
+	else if( e.code == 'Digit2' )
+		stop_overlay(2);
+	else if( e.code == 'Digit3' )
+		stop_overlay(3);
+	else if( e.code == 'Digit4' )
+		stop_overlay(4);
+	else if( e.code == 'Digit5' )
+		stop_overlay(5);
+	else if( e.code == 'Digit6' )
+		stop_overlay(6);
+
 }
 
 
@@ -141,7 +175,11 @@ async function on_open_directory_click( e )
 		const file = await playlistFile.handle.getFile();
 		const contents = await file.text();
 		playlist = JSON.parse(contents);
-		playlist_linear = Object.entries(playlist).map(([track, entry]) => entry.visuals.map(file => ({file, track}))).flat();
+		playlist_linear = Object.entries(playlist).map(([track, entry]) => entry.visuals.map(file => ({
+			file,
+			track,
+			overlays: entry.overlays,
+		}))).flat();
 		start_projecting();
 	}
 }
@@ -149,7 +187,7 @@ async function on_open_directory_click( e )
 function on_open_controls_click( e )
 {
 	e.preventDefault();
-	ui.controls_window = window.open( 'controls.html', 'controls', "menubar=no,location=no,resizable=yes,scrollbars=yes,status=no,toolbar=no,personalbar=no,width=800,height=600" );
+	ui.controls_window = window.open( 'controls.html', 'controls', "menubar=no,location=no,resizable=yes,scrollbars=yes,status=no,toolbar=no,personalbar=no,width=1000,height=800" );
 	ui.controls_window.addEventListener( 'DOMContentLoaded', load_controls_ui );
 	load_controls_ui();
 }
@@ -241,10 +279,29 @@ function seek_zero()
 	ui.src_video.play();
 }
 
+function play_overlay(id)
+{
+	console.log('play_overlay');
+	const playlist_entry = playlist_linear[current_video];
+	const current_video_file = filesystem.find(entry =>
+		entry.directoryHandle?.name === playlist_entry.track
+		&& entry.handle?.name === playlist_entry.overlays[id-1]
+		);
+	console.log(current_video_file);
+	ui.overlay_video.src = URL.createObjectURL(current_video_file);
+	ui.overlay_video.classList.add('visible');
+	ui.overlay_video.play();
+}
+
+function stop_overlay()
+{
+	ui.overlay_video.classList.remove('visible');
+}
+
 function play_this(id)
 {
 	current_video = id;
-	if( current_video >= playlist.length )
+	if( current_video >= playlist_linear.length )
 		current_video = 0;
 	
 	play_current_video();
