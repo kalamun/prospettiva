@@ -1,61 +1,9 @@
 /* )c( 2019 kalamun.net */
 
 // all videos should be recorded at 60 bpm
-var playlist = [
-	
-		'00-teatrosatanico.mp4',
-		// 'intro.mp4',
-		
-		// dagdadiel
-		'dag_01a.mp4',
-		'dag_01b.mp4',
-		'dag_01c.mp4',
-		
-		// parfaxitas
-		'par_elchamuco.mp4',
-		
-		// uriens
-		'uri_lava.mp4',
-		//'uri_flames.mp4',
-		'uri_dust.mp4',
-		
-		// cernunnos
-		'cernunnos.mp4',
-
-		// niantiel
-		'nia_smoke.mp4',
-		'nia_smoke2.mp4',
-		'nia_baronsamedi.mp4',
-		
-		// omazu
-		'omazu-fumo.mp4',
-		'omazu-greysmoke.mp4',
-		'omazu-redsmoke.mp4',
-		'omazu-fuoco.mp4',
-		'omazu-endsmoke.mp4',
-
-		// raflifu / sol niger
-		'eclypse.mp4',
-		'blackhole1.mp4',
-		'blackhole2.mp4',
-		
-		// zamradiel
-		'zamradiel.mp4',
-		
-		// shalicu
-		'chameleon.mp4',
-		'shalicu.mp4',
-
-		// lhp
-		'lhp-buedonna.mp4',
-		'lhp-egiziano.mp4',
-		'lhp-pingpong.mp4',
-		'lhp-knowledge.mp4',
-		'lhp-follow_lhp.mp4',
-		'lhp-turn_to_left.mp4',
-		'lhp-turn_to_red.mp4',
-
-	],
+var playlist = [],
+	playlist_linear = [],
+	filesystem = {},
 	current_video = 0,
 	next_to_play_on_cycle = '',
 	prev_to_play_on_cycle = '',
@@ -76,16 +24,6 @@ var last_tap = null,
 	beat_shake = [ false,false,false,false,false,false,false,false ];
 	beat_zoom = [ false,false,false,false,false,false,false,false ];
 	
-var filters = [
-		"none",
-		"chromase",
-		"carbon",
-		"noise",
-		"kaleido",
-	],
-	current_filter = 'none',
-	selected_filter = 'none';
-
 var ui = null;
 
 window.addEventListener( 'DOMContentLoaded', on_window_load );
@@ -95,26 +33,18 @@ function on_window_load( e )
 	ui = {
 		bpm : document.getElementById( 'bpm' ),
 		src_video : document.getElementById( 'src_video' ),
-		projector : null,
-		projector_window : null,
-		projector_container : document.getElementById( 'player' ),
+		projector_container: document.getElementById( 'player' ),
 		controls_window : null,
 	};
 
-	ui.projector_window = document.getElementById( 'projector' );
-	ui.projector = ui.projector_window.getContext("2d");
-	ui.projector.width = video_width;
-	ui.projector.height = video_height;
-	ui.projector_container.style.width = video_width + 'px';
-	ui.projector_container.style.height = video_height + 'px';
-	
-	video_to_projector();
-	play_current_video();
-	hit_the_beat();
-
-	
+	document.getElementById( 'open_directory' ).addEventListener( 'click', on_open_directory_click );
 	document.getElementById( 'full_screen' ).addEventListener( 'click', on_full_screen_click );
 	document.getElementById( 'open_controls' ).addEventListener( 'click', on_open_controls_click );
+}
+
+function start_projecting() {
+	play_current_video();
+	hit_the_beat();
 }
 
 window.addEventListener( 'keydown', on_keydown );
@@ -123,36 +53,38 @@ window.addEventListener( 'keyup', on_keyup );
 
 function on_keydown( e )
 {
-	e.preventDefault();
-	var is_shift = !!e.shiftKey;
-	
-	//console.log( e.code );
-	if( e.code == 'ArrowRight' )
-		is_shift ? play_next() : play_next_on_cycle();
+	if(!["F3", "F5", "F12"].includes(e.code)) {
+		e.preventDefault();
 
-	else if( e.code == 'ArrowLeft' )
-		is_shift ? play_prev() : play_prev_on_cycle();
-
-	else if( e.code == 'KeyT' )
-		set_bpm_by_tap();
+		var is_shift = !!e.shiftKey;
+		//console.log( e.code );
+		if( e.code == 'ArrowRight' )
+			is_shift ? play_next() : play_next_on_cycle();
 	
-	else if( e.code == 'KeyR' )
-		play_current_video();
+		else if( e.code == 'ArrowLeft' )
+			is_shift ? play_prev() : play_prev_on_cycle();
 	
-	else if( e.code == 'KeyS' )
-		shake_start();
-	
-	else if( e.code == 'KeyC' )
-		on_open_controls_click( e );
+		else if( e.code == 'KeyT' )
+			set_bpm_by_tap();
 		
-	else if( e.code == 'KeyF' )
-		on_full_screen_click( e );
+		else if( e.code == 'KeyR' )
+			play_current_video();
 		
-	else if( e.code == 'Space' )
-		strobe();
-
-	else if( e.code == 'KeyZ' )
-		zoom_start();
+		else if( e.code == 'KeyS' )
+			shake_start();
+		
+		else if( e.code == 'KeyC' )
+			on_open_controls_click( e );
+			
+		else if( e.code == 'KeyF' )
+			on_full_screen_click( e );
+			
+		else if( e.code == 'Space' )
+			strobe();
+	
+		else if( e.code == 'KeyZ' )
+			zoom_start();
+	}
 }
 
 function on_keyup( e )
@@ -169,6 +101,50 @@ function on_keyup( e )
 /*
 * CONTROLS
 */
+
+async function on_open_directory_click( e )
+{
+	// Recursive function that walks the directory structure.
+	const getFiles = async (dirHandle, path = dirHandle.name) => {
+		const dirs = [];
+		const files = [];
+		for await (const entry of dirHandle.values()) {
+			const nestedPath = `${path}/${entry.name}`;
+			if (entry.kind === "file") {
+				files.push(
+					entry.getFile().then((file) => {
+						file.directoryHandle = dirHandle;
+						file.handle = entry;
+						return Object.defineProperty(file, "webkitRelativePath", {
+							configurable: true,
+							enumerable: true,
+							get: () => nestedPath,
+						});
+					})
+				);
+			} else if (entry.kind === "directory") {
+				dirs.push(getFiles(entry, nestedPath));
+			}
+		}
+		return [
+			...(await Promise.all(dirs)).flat(),
+			...(await Promise.all(files)),
+		];
+	}
+
+	const handle = await window.showDirectoryPicker();
+	const directoryStructure = await getFiles(handle, undefined);
+
+	const playlistFile = directoryStructure.find(file => file.name === "playlist.json");
+	if (playlistFile) {
+		filesystem = directoryStructure;
+		const file = await playlistFile.handle.getFile();
+		const contents = await file.text();
+		playlist = JSON.parse(contents);
+		playlist_linear = Object.entries(playlist).map(([track, entry]) => entry.visuals.map(file => ({file, track}))).flat();
+		start_projecting();
+	}
+}
 
 function on_open_controls_click( e )
 {
@@ -202,24 +178,6 @@ function on_full_screen_click( e )
 	ui.projector_container.requestFullscreen();
 }
 
-function video_to_projector()
-{
-	if( !ui.projector ) return false;
-	projecting = true;
-	
-	if( current_filter == 'chromase' )
-		filter_chromase();
-	else if( current_filter == 'carbon' )
-		filter_carbon();
-	else if( current_filter == 'noise' )
-		filter_noise();
-	else if( current_filter == 'kaleido' )
-		filter_kaleido();
-	else
-		filter_none();
-	
-	requestAnimationFrame( video_to_projector );
-}
 
 
 /*
@@ -227,153 +185,32 @@ function video_to_projector()
 */
 function shake_start()
 {
-	ui.projector_window.className += ' shake';
+	document.body.classList.add('shake');
 }
 
 function shake_stop()
 {
-	ui.projector_window.className = ui.projector_window.className.replace( / shake/g, '' );
+	document.body.classList.remove('shake');
 }
 
 function zoom_start()
 {
-	ui.projector_window.className += ' zoom';
+	document.body.classList.add('zoom');
 }
 
 function zoom_stop()
 {
-	ui.projector_window.className = ui.projector_window.className.replace( / zoom/g, '' );
+	document.body.classList.remove('zoom');
 }
 
 function strobe()
 {
-	var light = document.createElement( 'DIV' );
+	const light = document.createElement( 'DIV' );
 	light.className = 'strobe-light';
 	ui.projector_container.appendChild( light );
-	setTimeout( function() { for( i=0, c=document.querySelectorAll( 'strobe-light' ); c[i]; i++ ) { c[i].parentNode.removeChild( c[i] ); } }, 1000 );
+	setTimeout( function() { for( i=0, c=document.querySelectorAll( '.strobe-light' ); c[i]; i++ ) { c[i].parentNode.removeChild( c[i] ); } }, 1000 );
 }
 
-
-/*
-* FILTERS
-*/
-
-function set_filter( filter )
-{
-	selected_filter = filter;
-}
-
-function filter_none()
-{
-	ui.projector.drawImage( ui.src_video, 0, 0, video_width, video_height );
-}
-
-function filter_chromase()
-{
-	ui.projector.drawImage( ui.src_video, 0, 0, video_width, video_height );
-
-	var cdata = ui.projector.getImageData( 0, 0, video_width, video_height );
-	var random = Math.round( Math.random() * 30 );
-	if( random <= 10 ) random = 0;
-	
-	for( var x=0; x < video_width; x++ )
-	{
-		for( var y=0; y < video_height; y++ )
-		{
-			var i = ( video_width * y + x ) * 4;
-			cdata.data[ i ] = cdata.data[ i - random ];
-			cdata.data[ i + 1 ] = cdata.data[ i + 1 + random ];
-			//cdata.data[i+2]=255*cdata.data[i+2]/0xFF;
-		}
-	}
-	ui.projector.putImageData( cdata, 0, 0 );
-}
-
-function filter_carbon()
-{
-	if( !window.previous_beat )
-		window.previous_beat = beat;
-	
-	var oldcdata = ui.projector.getImageData( 0, 0, video_width, video_height );
-	
-	ui.projector.drawImage( ui.src_video, 0, 0, video_width, video_height );
-
-	var cdata = ui.projector.getImageData( 0, 0, video_width, video_height );
-	var rand = 150 + Math.random() * 100;
-	
-	for( var x=0; x < video_width; x++ )
-	{
-		for( var y=0; y < video_height; y++ )
-		{
-			var i = ( video_width * y + x ) * 4;
-
-			if( window.previous_beat == beat )
-			{
-				if( cdata.data[i] < rand )
-				{
-					cdata.data[i] = oldcdata.data[i]*.3+rand/10;
-					cdata.data[i+1] = cdata.data[i]*.3+rand/10;//oldcdata.data[i]-5;
-					cdata.data[i+2] = cdata.data[i]*.3+rand/10;//oldcdata.data[i]-5;
-				} else {
-					cdata.data[i] = cdata.data[i]+Math.random()*30;
-					cdata.data[i+1] = cdata.data[i+1]+Math.random()*30;
-					cdata.data[i+2] = cdata.data[i+2]+Math.random()*30;
-				}
-			} else {
-				cdata.data[i] = cdata.data[i]+Math.random()*30;
-				cdata.data[i+1] = cdata.data[i+1]+Math.random()*30;
-				cdata.data[i+2] = cdata.data[i+2]+Math.random()*30;
-			}
-		}
-	}
-	ui.projector.putImageData( cdata, 0, 0 );
-	
-	window.previous_beat = beat;
-}
-
-function filter_noise()
-{
-	ui.projector.drawImage( ui.src_video, 0, 0, video_width, video_height );
-
-	var cdata = ui.projector.getImageData( 0, 0, video_width, video_height );
-	var old_data = cdata;
-	
-	for( var y=0; y < video_height; y++ )
-	{
-		for( var x=0; x < video_width; x++ )
-		{
-			var random = Math.round( Math.random() * 20 ) - 10;
-			var i = ( video_width * y + x ) * 4;
-			cdata.data[ i ] = old_data.data[ i + random * 4 ];
-			cdata.data[ i+1 ] = old_data.data[ i + 1 + random * 4 ];
-			cdata.data[ i+2 ] = old_data.data[ i + 2 + random * 4 ];
-//			cdata.data[ i+3 ] = cdata.data[ i + 3 + random ];
-		}
-	}
-	ui.projector.putImageData( cdata, 0, 0 );
-}
-
-function filter_kaleido()
-{
-	ui.projector.drawImage( ui.src_video, 0, 0, video_width, video_height );
-
-	var cdata = ui.projector.getImageData( 0, 0, video_width / 2 , video_height );
-	var cdata2 = cdata;
-
-	d=10;
-	for( var y=0; y < video_height; y++ )
-	{
-		for( var x=0; x < video_width / d; x++ )
-		{
-			var i = ( video_width / d * y + x ) * 4;
-			var c = x * 4;
-			cdata2.data[ i ] = cdata.data[ i - c ];
-			cdata2.data[ i + 1 ] = cdata.data[ i  - c + 1 ];
-			cdata2.data[ i + 2 ] = cdata.data[ i  - c + 2 ];
-		}
-	}
-	ui.projector.putImageData( cdata2, video_width / d, 0 );
-}
 
 
 
@@ -384,7 +221,9 @@ function filter_kaleido()
 
 function play_current_video()
 {
-	ui.src_video.src = 'videos/' + playlist[ current_video ];
+	const playlist_entry = playlist_linear[current_video];
+	const current_video_file = filesystem.find(entry => entry.directoryHandle?.name === playlist_entry.track && entry.handle?.name === playlist_entry.file);
+	ui.src_video.src = URL.createObjectURL(current_video_file);
 	ui.src_video.width = video_width;
 	ui.src_video.height = video_height;
 	ui.src_video.play();

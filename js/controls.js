@@ -12,34 +12,40 @@ window.addEventListener( 'DOMContentLoaded', on_window_load );
 
 function on_window_load( e )
 {
-	// load filters
-	ui.filters = document.getElementById( 'filters' );
-	
-	for( var i = 0; window.opener.filters[i]; i++ )
-	{
-		var elm = document.createElement( 'li' );
-		elm.innerHTML = window.opener.filters[i];
-		elm.addEventListener( 'click', set_filter );
-		
-		ui.filters.appendChild( elm );
-	}
-
 	// load playlist
 	ui.playlist = document.getElementById( 'playlist' );
 	
-	for( var i = 0; window.opener.playlist[i]; i++ )
+	let track_id = 0;
+	console.log(window.opener, window.opener.playlist);
+	for(const [track, entry] of Object.entries(window.opener.playlist))
 	{
-		var elm = document.createElement( 'li' );
-		elm.innerHTML = window.opener.playlist[i];
-		elm.dataset.id = i;
-		elm.addEventListener( 'click', (e) => window.opener.play_this(e.currentTarget.dataset.id) );
+		let track_elm = document.createElement( 'li' );
+		track_elm.innerHTML = track;
 		
-		ui.playlist.appendChild( elm );
+		const track_ul = document.createElement( 'ul' );
+		for(const file of entry.visuals) {
+			const current_id = track_id++;
+			let visual_elm = document.createElement( 'li' );
+			visual_elm.innerHTML = file;
+			visual_elm.dataset.id = current_id;
+			visual_elm.addEventListener( 'click', (e) => window.opener.play_this(current_id) );
+			track_ul.appendChild(visual_elm);
+		}
+		track_elm.appendChild( track_ul );
+		
+		ui.playlist.appendChild( track_elm );
 	}
 	
 	mark_current_video();
 
 	// create sequencers
+	pad_labels = {
+		fx: 		"OVERLAY ",
+		strobe: "STROBE  ",
+		shake: 	"SHAKE   ",
+		zoom:		"ZOOM    ",
+	};
+
 	for( var i=1; i<=8; i++ )
 	{
 		var pad = document.createElement( 'DIV' );
@@ -49,26 +55,25 @@ function on_window_load( e )
 		
 		var pad_fx = pad.cloneNode();
 		pad_fx.addEventListener( 'click', on_fx_click );
-
+		pad_fx.innerHTML = pad_labels.fx[i-1];
+		
 		var pad_strobe = pad.cloneNode();
 		pad_strobe.addEventListener( 'click', on_strobe_click );
-
+		pad_strobe.innerHTML = pad_labels.strobe[i-1];
+		
 		var pad_shake = pad.cloneNode();
 		pad_shake.addEventListener( 'click', on_shake_click );
+		pad_shake.innerHTML = pad_labels.shake[i-1];
 		
 		var pad_zoom = pad.cloneNode();
 		pad_zoom.addEventListener( 'click', on_zoom_click );
+		pad_zoom.innerHTML = pad_labels.zoom[i-1];
 		
 		document.querySelector( '.fx-seq' ).appendChild( pad_fx );
 		document.querySelector( '.strobe-seq' ).appendChild( pad_strobe );
 		document.querySelector( '.shake-seq' ).appendChild( pad_shake );
 		document.querySelector( '.zoom-seq' ).appendChild( pad_zoom );
 	}
-	
-	document.querySelector( '.fx-seq' ).appendChild( document.createTextNode( 'Filter' ) );
-	document.querySelector( '.strobe-seq' ).appendChild( document.createTextNode( 'Strobe' ) );
-	document.querySelector( '.shake-seq' ).appendChild( document.createTextNode( 'Shake' ) );
-	document.querySelector( '.zoom-seq' ).appendChild( document.createTextNode( 'Zoom' ) );
 }
 
 
@@ -158,31 +163,15 @@ function on_reset_click( e )
 }
 
 
-/*
-* FILTERS
-*/
-
-function set_filter( e )
-{
-	for( var i=0, c=this.parentNode.childNodes; c[i]; i++ )
-	{
-		c[i].className = '';
-	}
-	
-	this.className = 'selected';
-	window.opener.set_filter( this.innerHTML );
-}
-
 
 /*
 * PLAYLIST
 */
 function mark_current_video()
 {
-	for( var i=0, c=ui.playlist.getElementsByTagName('li'); c[i]; i++ )
-	{
-		c[i].className = '';
+	document.querySelectorAll("#playlist li ul li").forEach((li, i) => {
+		li.classList.remove('selected');
 		if( i == window.opener.current_video )
-			c[i].className = 'selected';
-	}
+			li.classList.add('selected');
+	});
 }

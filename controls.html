@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Prospettiva - VJ controller</title>
+<title>Prospettiva - Controls</title>
 
 <script type="text/javascript" src="js/controls.js" charset="utf-8"></script>
   
@@ -75,20 +75,21 @@ input {
 .seq {
 	width:100%;
 	background:#000;
-}
-.seq:after {
-	display:block;
-	content:'';
-	clear:both;
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	gap: 4px;
+	margin: 4px 0;
 }
 .seq > div {
 	width:75px;
 	height:75px;
 	background:transparent;
 	border-radius:3px;
-	margin:2px;
 	border:2px solid #444;
-	display: inline-block;
+	color:#666;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	vertical-align: middle;
 }
 .seq .active {
@@ -102,18 +103,22 @@ input {
 	border-color:#ca0000;
 }
 
-ul{
+ul {
 	padding:0;
 	margin:0;
 	list-style:none;
 }
-ul li {
+ul#playlist > li {
+	margin-bottom: 20px;
+}
+ul#playlist li ul li {
+	font-size: 0.8em;
 	padding:4px 10px;
 	margin:3px 0;
 	border-radius:5px;
 	background:#222222;
 }
-ul li.selected {
+ul#playlist li.selected {
 	background:#ca0000;
 }
 
@@ -125,7 +130,7 @@ ul li.selected {
 <body>
 
 <div class="container">
-	<div class="column">
+	<div class="column sequencer-wrapper">
 		<div class="bpm-container">
 			BPM: <input type="number" id="bpm" value="60">
 		</div>
@@ -150,16 +155,12 @@ ul li.selected {
 		</div>
 	</div>
 
-	<div class="column">
-		FILTERS:
-		<ul id="filters">
+	<div class="column playlist-wrapper">
+		<ul id="playlist">
 		</ul>
 	</div>
 
-	<div class="column">
-		PLAYLIST:
-		<ul id="playlist">
-		</ul>
+	<div class="column notes-wrapper">
 	</div>
 </div>
 
