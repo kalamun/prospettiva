@@ -29,6 +29,10 @@ var ui = null;
 
 window.addEventListener( 'DOMContentLoaded', on_window_load );
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js");
+}
+
 function on_window_load( e )
 {
 	ui = {
@@ -62,7 +66,7 @@ function on_keydown( e )
 		key_down[e.code] = true;
 
 		var is_shift = !!e.shiftKey;
-		//console.log( e.code );
+
 		if( e.code == 'ArrowRight' )
 			is_shift ? play_next() : play_next_on_cycle();
 	
@@ -102,6 +106,8 @@ function on_keydown( e )
 			play_overlay(5);
 		else if( e.code == 'Digit6' )
 			play_overlay(6);
+		else if( e.code == 'Digit0' )
+			toggle_black_screen();
 	}
 }
 
@@ -281,13 +287,11 @@ function seek_zero()
 
 function play_overlay(id)
 {
-	console.log('play_overlay');
 	const playlist_entry = playlist_linear[current_video];
 	const current_video_file = filesystem.find(entry =>
 		entry.directoryHandle?.name === playlist_entry.track
 		&& entry.handle?.name === playlist_entry.overlays[id-1]
 		);
-	console.log(current_video_file);
 	ui.overlay_video.src = URL.createObjectURL(current_video_file);
 	ui.overlay_video.classList.add('visible');
 	ui.overlay_video.play();
@@ -349,6 +353,10 @@ function refresh_playback_rate()
 	hit_the_beat();
 }
 
+function toggle_black_screen()
+{
+	document.body.classList.toggle('black-screen')
+}
 
 
 /*
@@ -443,11 +451,11 @@ function hit_the_beat()
 	
 	// shake
 	if( beat_shake[ beat ] ) shake_start();
-	else shake_stop();
+	else if (!key_down.KeyS) shake_stop();
 
 	// zoom
 	if( beat_zoom[ beat ] ) zoom_start();
-	else zoom_stop();
+	else if (!key_down.KeyZ) zoom_stop();
 
 	// strobe
 	if( beat_reset[ beat ] )

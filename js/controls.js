@@ -34,13 +34,14 @@ function on_window_load( e )
 			overlay_ul.appendChild(overlay_elm);
 		}
 		track_elm.appendChild( overlay_ul );
-
+		
 		const track_ul = document.createElement( 'ul' );
 		for(const file of entry.visuals) {
 			const current_id = track_id++;
 			let visual_elm = document.createElement( 'li' );
 			visual_elm.innerHTML = file;
 			visual_elm.dataset.id = current_id;
+			visual_elm.dataset.track = track;
 			visual_elm.addEventListener( 'click', (e) => window.opener.play_this(current_id) );
 			track_ul.appendChild(visual_elm);
 		}
@@ -95,10 +96,16 @@ function on_window_load( e )
 */
 
 window.addEventListener( 'keydown', on_keydown );
+window.addEventListener( 'keyup', on_keyup );
 
 function on_keydown( e )
 {
 	window.opener.on_keydown( e );
+}
+
+function on_keyup( e )
+{
+	window.opener.on_keyup( e );
 }
 
 /*
@@ -184,7 +191,14 @@ function mark_current_video()
 {
 	document.querySelectorAll("#playlist li ul li").forEach((li, i) => {
 		li.classList.remove('selected');
-		if( i == window.opener.current_video )
+		if( i == window.opener.current_video ) {
 			li.classList.add('selected');
+			const top = li.getBoundingClientRect().y - 100 + ui.playlist?.parentNode.scrollTop;
+			ui.playlist?.parentNode.scrollTo({top, behavior: "smooth"});
+			const notes = window.opener?.filesystem?.find(entry => entry.directoryHandle?.name === li.dataset.track && entry.handle?.name === "notes.svg");
+			if (notes) {
+				document.querySelector('.notes-wrapper > img').src = URL.createObjectURL(notes);
+			}
+		}
 	});
 }
