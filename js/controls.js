@@ -83,7 +83,6 @@ function on_window_load( e )
 		pad_zoom.addEventListener( 'click', on_zoom_click );
 		pad_zoom.innerHTML = pad_labels.zoom[i-1];
 		
-		document.querySelector( '.fx-seq' ).appendChild( pad_fx );
 		document.querySelector( '.strobe-seq' ).appendChild( pad_strobe );
 		document.querySelector( '.shake-seq' ).appendChild( pad_shake );
 		document.querySelector( '.zoom-seq' ).appendChild( pad_zoom );

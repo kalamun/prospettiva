@@ -30,7 +30,7 @@ var ui = null;
 window.addEventListener( 'DOMContentLoaded', on_window_load );
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js");
+  navigator.serviceWorker.register("./js/sw.js");
 }
 
 function on_window_load( e )
