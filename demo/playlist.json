@@ -1,0 +1,45 @@
+{
+  "intro": {
+    "visuals": ["00-teatrosatanico.mp4", "intro.mp4"],
+    "overlays": []
+  },
+  "elia": {
+    "visuals": ["einoch1.mp4", "einoch2.mp4"],
+    "overlays": []
+  },
+  "cernunnos": {
+    "visuals": ["cernunnos.mp4", "cernunnos2.mp4"],
+    "overlays": []
+  },
+  "thanatos": {
+    "visuals": ["thanatos.mp4"],
+    "overlays": []
+  },
+  "cargocult": {
+    "visuals": [
+      "cargocult01.mp4",
+      "cargocult02.mp4"
+    ],
+    "overlays": []
+  },
+  "mannfraugott": {
+    "visuals": [
+      "0.mp4",
+      "01-uomo-disse.mp4",
+      "02-ti-do-sesso.mp4",
+      "03-vuoi-amore.mp4",
+      "04-donna-disse.mp4",
+      "05-ti-do-amore.mp4",
+      "06-vuoi-sesso.mp4",
+      "07-dio-disse.mp4",
+      "08-do-sesso-amore.mp4",
+      "09-alla-fine.mp4",
+      "10-vi-uccido-tutti.mp4"
+    ],
+    "overlays": []
+  },
+  "credits": {
+    "visuals": ["credits.mp4"],
+    "overlays": []
+  }
+}

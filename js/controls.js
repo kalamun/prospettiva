@@ -58,6 +58,7 @@ function on_window_load( e )
 		strobe: "STROBE  ",
 		shake: 	"SHAKE   ",
 		zoom:		"ZOOM    ",
+		color:	"COLOR   ",
 	};
 
 	for( var i=1; i<=8; i++ )
@@ -83,9 +84,14 @@ function on_window_load( e )
 		pad_zoom.addEventListener( 'click', on_zoom_click );
 		pad_zoom.innerHTML = pad_labels.zoom[i-1];
 		
+		var pad_color = pad.cloneNode();
+		pad_color.addEventListener( 'click', on_color_click );
+		pad_color.innerHTML = pad_labels.color[i-1];
+		
 		document.querySelector( '.strobe-seq' ).appendChild( pad_strobe );
 		document.querySelector( '.shake-seq' ).appendChild( pad_shake );
 		document.querySelector( '.zoom-seq' ).appendChild( pad_zoom );
+		document.querySelector( '.color-seq' ).appendChild( pad_color );
 	}
 }
 
@@ -171,6 +177,14 @@ function on_zoom_click( e )
 	var active = this.classList.contains( 'active' ) ? true : false;
 	this.dataset.active = active;
 	window.opener.beat_zoom[ this.dataset.number ] = active;
+}
+
+function on_color_click( e )
+{
+	this.classList.toggle( 'active' );
+	var active = this.classList.contains( 'active' ) ? true : false;
+	this.dataset.active = active;
+	window.opener.beat_color[ this.dataset.number ] = active;
 }
 
 function on_reset_click( e )

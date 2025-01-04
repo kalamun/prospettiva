@@ -3,6 +3,8 @@ const cacheName = "prospettiva";
 const appShellFiles = [
   "js/controls.js",
   "js/prospettiva.js",
+  "css/prospettiva.css",
+  "css/gfx.css",
   "controls.html",
   "index.html",
 ];
