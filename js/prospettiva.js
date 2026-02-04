@@ -67,23 +67,25 @@ window.addEventListener("keyup", on_keyup);
 function on_keydown(e) {
   if (!["F3", "F5", "F12"].includes(e.code) && !bpm_is_focused) {
     e.preventDefault();
-
+    e.stopPropagation();
+    e.returnValue = false;
+    
     if (key_down[e.code]) return;
     key_down[e.code] = true;
-
+    
     var is_shift = !!e.shiftKey;
 
-    if (e.code == "ArrowRight" || e.code == "PageDown")
-      (is_shift || e.code == "PageDown") ? play_next() : play_next_on_cycle();
-    else if (e.code == "ArrowLeft" || e.code == "PageUp")
-      (is_shift || e.code == "PageUp") ? play_prev() : play_prev_on_cycle();
+    if (["ArrowRight", "PageDown", "ArrowDown"].includes(e.code))
+      (is_shift || ["PageDown", "ArrowDown"].includes(e.code)) ? play_next() : play_next_on_cycle();
+    else if (["ArrowLeft", "PageUp", "ArrowUp"].includes(e.code))
+      (is_shift || ["PageUp", "ArrowUp"].includes(e.code)) ? play_prev() : play_prev_on_cycle();
     else if (e.code == "KeyT") set_bpm_by_tap();
     else if (e.code == "KeyR") play_current_video();
-    else if (e.code == "KeyS") shake_start();
+    else if (e.code == "KeyS" || e.key == "AudioVolumeUp") shake_start();
     else if (e.code == "KeyC") on_open_controls_click(e);
     else if (e.code == "KeyF") on_full_screen_click(e);
-    else if (e.code == "Space" || e.code == "KeyB") strobe();
-    else if (e.code == "KeyZ") zoom_start();
+    else if (e.code == "Space" || e.code == "KeyB" || e.code == "Tab") strobe();
+    else if (e.code == "KeyZ" || e.key == "AudioVolumeDown") zoom_start();
     else if (e.code == "KeyB") toggle_black_screen();
     else if (e.code == "Digit1") play_overlay(1);
     else if (e.code == "Digit2") play_overlay(2);
@@ -92,6 +94,8 @@ function on_keydown(e) {
     else if (e.code == "Digit5") play_overlay(5);
     else if (e.code == "Digit6") play_overlay(6);
     else if (e.code == "Digit0") play_color_overlay();
+
+    return false;
   }
 }
 
@@ -99,16 +103,19 @@ function on_keyup(e) {
 	if (!["F3", "F5", "F12"].includes(e.code)  && !bpm_is_focused) {
 		e.preventDefault();
 		key_down[e.code] = false;
+    var is_shift = !!e.shiftKey;
 	
-		if (e.code == "KeyS") shake_stop();
-		else if (e.code == "KeyZ") zoom_stop();
-		else if (e.code == "Digit1") stop_overlay(1);
-		else if (e.code == "Digit2") stop_overlay(2);
-		else if (e.code == "Digit3") stop_overlay(3);
-		else if (e.code == "Digit4") stop_overlay(4);
-		else if (e.code == "Digit5") stop_overlay(5);
-		else if (e.code == "Digit6") stop_overlay(6);
-		else if (e.code == "Digit0") stop_color_overlay();
+		if (e.code == "KeyS" || e.key == "AudioVolumeUp") shake_stop();
+		else if (e.code == "KeyZ" || e.key == "AudioVolumeDown") zoom_stop();
+    else if (!is_shift) {
+      if (e.code == "Digit1") stop_overlay(1);
+      else if (e.code == "Digit2") stop_overlay(2);
+      else if (e.code == "Digit3") stop_overlay(3);
+      else if (e.code == "Digit4") stop_overlay(4);
+      else if (e.code == "Digit5") stop_overlay(5);
+      else if (e.code == "Digit6") stop_overlay(6);
+      else if (e.code == "Digit0") stop_color_overlay();
+    }
 	}
 }
 

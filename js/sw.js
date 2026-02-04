@@ -13,6 +13,9 @@ self.addEventListener("install", (e) => {
   e.waitUntil(
     (async () => {
       const cache = await caches.open(cacheName);
+      for (const file of appShellFiles) {
+        await cache.delete(file);
+      }
       await cache.addAll(appShellFiles);
     })(),
   );
