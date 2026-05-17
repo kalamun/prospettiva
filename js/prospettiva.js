@@ -9,6 +9,8 @@ var playlist = [],
   prev_to_play_on_cycle = "",
   video_width = 1280,
   video_height = 720,
+  video_top = 0;
+  video_left = 0;
   projecting = false;
 
 var last_tap = null,
@@ -74,17 +76,23 @@ function on_keydown(e) {
     key_down[e.code] = true;
     
     var is_shift = !!e.shiftKey;
+    var is_ctrl = !!e.ctrlKey;
 
     if (["ArrowRight", "PageDown", "ArrowDown"].includes(e.code))
       (is_shift || ["PageDown", "ArrowDown"].includes(e.code)) ? play_next() : play_next_on_cycle();
     else if (["ArrowLeft", "PageUp", "ArrowUp"].includes(e.code))
       (is_shift || ["PageUp", "ArrowUp"].includes(e.code)) ? play_prev() : play_prev_on_cycle();
+    else if (is_ctrl && e.code == "ArrowUp") move_projector(-10, 0);
+    else if (is_ctrl && e.code == "ArrowDown") move_projector(10, 0);
+    else if (is_ctrl && e.code == "ArrowRight") move_projector(0, 10);
+    else if (is_ctrl && e.code == "ArrowLeft") move_projector(0, -10);
     else if (e.code == "KeyT") set_bpm_by_tap();
     else if (e.code == "KeyR") play_current_video();
     else if (e.code == "KeyS" || e.key == "AudioVolumeUp") shake_start();
-    else if (e.code == "KeyC") on_open_controls_click(e);
-    else if (e.code == "KeyF") on_full_screen_click(e);
-    else if (e.code == "Space" || e.code == "KeyB" || e.code == "Tab") strobe();
+    else if (is_ctrl && e.code == "KeyL") on_open_directory_click(e);
+    else if (is_ctrl && e.code == "KeyQ") on_open_controls_click(e);
+    else if (is_ctrl && e.code == "KeyF") on_full_screen_click(e);
+    else if (e.code == "Space" || e.code == "Tab") strobe();
     else if (e.code == "KeyZ" || e.key == "AudioVolumeDown") zoom_start();
     else if (e.code == "KeyB") toggle_black_screen();
     else if (e.code == "Digit1") play_overlay(1);
@@ -93,7 +101,7 @@ function on_keydown(e) {
     else if (e.code == "Digit4") play_overlay(4);
     else if (e.code == "Digit5") play_overlay(5);
     else if (e.code == "Digit6") play_overlay(6);
-    else if (e.code == "Digit0") play_color_overlay();
+    else if (e.code == "KeyC" || e.code == "Digit0") play_color_overlay();
 
     return false;
   }
@@ -114,7 +122,7 @@ function on_keyup(e) {
       else if (e.code == "Digit4") stop_overlay(4);
       else if (e.code == "Digit5") stop_overlay(5);
       else if (e.code == "Digit6") stop_overlay(6);
-      else if (e.code == "Digit0") stop_color_overlay();
+      else if (e.code == "KeyC" || e.code == "Digit0") stop_color_overlay();
     }
 	}
 }
@@ -188,6 +196,7 @@ function load_controls_ui(e) {
   if (!ui.controls_window.document) return false;
 
   ui.bpm = ui.controls_window.document.getElementById("bpm");
+  ui.reset_bpm = ui.controls_window.document.getElementById("reset_bpm");
   ui.fx = ui.controls_window.document.querySelector(".fx-seq");
   ui.strobe = ui.controls_window.document.querySelector(".strobe-seq");
   ui.shake = ui.controls_window.document.querySelector(".shake-seq");
@@ -197,6 +206,8 @@ function load_controls_ui(e) {
 	ui.bpm?.addEventListener('change', (e) => set_bpm_by_value(e.target.value));
 	ui.bpm?.addEventListener('focus', () => bpm_is_focused = true);
 	ui.bpm?.addEventListener('blur', () => bpm_is_focused = false);
+
+  ui.reset_bpm?.addEventListener('click', (e) => set_bpm_by_value(60));
 }
 
 /*
@@ -331,6 +342,11 @@ function refresh_playback_rate() {
 
 function toggle_black_screen() {
   document.body.classList.toggle("black-screen");
+}
+
+function move_projector(x, y) {
+  ui.projector_container.style.top = (Number(ui.projector_container.style.top) + y) + 'px';
+  ui.projector_container.style.left = (Number(ui.projector_container.style.left) + x) + 'px';
 }
 
 /*
